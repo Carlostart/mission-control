@@ -35,8 +35,7 @@ services:
       - ./openclaw-state:/run/openclaw:ro
       # OpenCode binary (readable by all, UID 1001 compatible)
       - /home/opencode/.opencode/bin/opencode:/usr/local/bin/opencode:ro
-      # OpenClaw wrapper script
-      - ./openclaw-state/openclaw-bin.sh:/usr/local/bin/openclaw:ro
+      # OpenClaw wrapper intentionally omitted — detected via HEARTBEAT.md in state dir
     # Run as openclaw user (UID 1001) to read /home/openclaw (perms 750)
     user: "1001:1001"
     # Allow the container to reach an OpenClaw gateway running on the Docker host.
