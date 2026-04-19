@@ -258,19 +258,38 @@ function detectOpenClaw(): RuntimeStatus {
     installed = true
   }
 
-  // Try to get version
-  try {
-    const result = require('node:child_process').spawnSync(
-      config.openclawBin || 'openclaw',
-      ['--version'],
-      { stdio: 'pipe', timeout: 3000 }
-    )
-    if (result.status === 0) {
+  // Joseka homelab: detect via state directory (HEARTBEAT.md or AGENTS.md presence)
+  if (!installed && config.openclawStateDir) {
+    const heartbeat = join(config.openclawStateDir, 'HEARTBEAT.md')
+    const agents = join(config.openclawStateDir, 'AGENTS.md')
+    if (existsSync(heartbeat) || existsSync(agents)) {
       installed = true
-      version = (result.stdout?.toString() || '').trim() || null
+      // Try to extract version from HEARTBEAT.md first line
+      try {
+        if (existsSync(heartbeat)) {
+          const content = readFileSync(heartbeat, 'utf8')
+          const match = content.match(/v?([\d]{4}\.[\d]+\.[\d]+(?:\s*\([^)]+\))?)/i)
+          if (match) version = match[1].trim()
+        }
+      } catch { /* ignore */ }
     }
-  } catch {
-    // binary not found
+  }
+
+  // Try to get version from binary
+  if (!version) {
+    try {
+      const result = require('node:child_process').spawnSync(
+        config.openclawBin || 'openclaw',
+        ['--version'],
+        { stdio: 'pipe', timeout: 3000 }
+      )
+      if (result.status === 0) {
+        installed = true
+        version = (result.stdout?.toString() || '').trim() || null
+      }
+    } catch {
+      // binary not found
+    }
   }
 
   // Check if gateway port is listening (simple sync check)

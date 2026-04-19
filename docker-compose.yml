@@ -31,10 +31,12 @@ services:
         required: false
     volumes:
       - mc-data:/app/.data
-      # Mount OpenClaw state directory read-only for agent configs, memory, heartbeat
-      # Uses a synced copy in /home/opencode/dev/mission-control/openclaw-state/
-      # (sync-openclaw-state.sh runs via cron every 5 min)
+      # OpenClaw state (synced every 5min via cron)
       - ./openclaw-state:/run/openclaw:ro
+      # OpenCode binary (readable by all, UID 1001 compatible)
+      - /home/opencode/.opencode/bin/opencode:/usr/local/bin/opencode:ro
+      # OpenClaw wrapper script
+      - ./openclaw-state/openclaw-bin.sh:/usr/local/bin/openclaw:ro
     # Run as openclaw user (UID 1001) to read /home/openclaw (perms 750)
     user: "1001:1001"
     # Allow the container to reach an OpenClaw gateway running on the Docker host.
@@ -46,6 +48,7 @@ services:
     tmpfs:
       - /tmp
       - /app/.next/cache
+      - /nonexistent
     cap_drop:
       - ALL
     cap_add:
